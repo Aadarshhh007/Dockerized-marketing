@@ -17,14 +17,20 @@ jobs:
         with:
           python-version: '3.10'
 
-      # ✅ Step 3: Debug (yeh tumne bola add karna)
+      # Step 3: Debug
       - name: Debug files
         run: ls -R
 
-      # Step 4: Install dependencies
-      - name: Install dependencies
-        run: pip install -r backend/requirements.txt   # 👈 baad me path change karenge agar needed
+      # ✅ Step 4: Install dependencies (UPDATED)
+      - name: Install root dependencies
+        run: pip install -r requirements.txt
 
-      # (optional) Step 5: Run app/test
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Install frontend dependencies
+        run: pip install -r frontend/requirements.txt
+
+      # Step 5: Run app/test
       - name: Run app
         run: echo "Build successful"
