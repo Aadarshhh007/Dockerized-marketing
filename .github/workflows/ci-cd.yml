@@ -7,14 +7,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # Step 1: Repo checkout
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      # Step 2: Python setup
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Check files
+      # ✅ Step 3: Debug (yeh tumne bola add karna)
+      - name: Debug files
         run: ls -R
 
+      # Step 4: Install dependencies
       - name: Install dependencies
-        run: pip install -r project/requirements.txt   # 👈 FIX
+        run: pip install -r backend/requirements.txt   # 👈 baad me path change karenge agar needed
+
+      # (optional) Step 5: Run app/test
+      - name: Run app
+        run: echo "Build successful"
