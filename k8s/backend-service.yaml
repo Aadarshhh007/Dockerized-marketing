@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: marketing-backend-svc
+  namespace: marketing
+  labels:
+    app: marketing-backend
+spec:
+  selector:
+    app: marketing-backend
+  type: ClusterIP
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8000
+      targetPort: 8000

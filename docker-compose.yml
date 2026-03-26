@@ -1,0 +1,104 @@
+version: "3.9"
+
+# ============================================================
+# Marketing Service — Docker Compose
+# One command: docker compose up -d
+# ============================================================
+
+services:
+
+  # ----------------------------------------------------------
+  # Backend: FastAPI application
+  # ----------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: marketing-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=${DATABASE_URL:-postgresql://marketing:marketing@postgres:5432/marketingdb}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - marketing-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ----------------------------------------------------------
+  # Frontend: Streamlit dashboard
+  # ----------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: marketing-frontend
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    environment:
+      - API_BASE_URL=http://backend:8000/api/v1
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - marketing-net
+
+  # ----------------------------------------------------------
+  # Database: PostgreSQL
+  # ----------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: marketing-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: marketingdb
+      POSTGRES_USER: marketing
+      POSTGRES_PASSWORD: marketing
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - marketing-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marketing -d marketingdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ----------------------------------------------------------
+  # Nginx: Reverse proxy (optional for production-like local)
+  # ----------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: marketing-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - marketing-net
+
+volumes:
+  postgres-data:
+    driver: local
+
+networks:
+  marketing-net:
+    driver: bridge
