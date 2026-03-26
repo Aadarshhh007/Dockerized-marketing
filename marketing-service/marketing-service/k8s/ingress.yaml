@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: marketing-ingress
+  namespace: marketing
+  annotations:
+    kubernetes.io/ingress.class: "alb"
+    alb.ingress.kubernetes.io/scheme: "internet-facing"
+    alb.ingress.kubernetes.io/target-type: "ip"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/YOUR-CERT-ID"
+    alb.ingress.kubernetes.io/healthcheck-path: "/api/v1/health"
+spec:
+  rules:
+    - host: marketing.yourdomain.com
+      http:
+        paths:
+          # API routes → backend
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: marketing-backend-svc
+                port:
+                  number: 8000
+          # All other routes → Streamlit frontend
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: marketing-frontend-svc
+                port:
+                  number: 8501
